@@ -1,9 +1,10 @@
 ( function($){
 
+	var self;
 	var JxCombo = {
 		
 		init: function () {
-			var self = this;
+			self = this;
 
 			var jxcombos = $("select[role='jxcombo']");
 
@@ -14,42 +15,11 @@
 
 				var $jxcombo = $(jxcombos[index]);
 				
-				var hasParent = $jxcombo.data('parent') ? true: false;				
-
+				var hasParent = $jxcombo.data('parent') ? true: false;
+				
 				if ( ! hasParent )
-				{
-					
-					//var $combo = $jxcombo;
-					
-					$.ajax({
-						
-						url: $jxcombo.data('source'),
-						
-						method: 'GET',
-						
-						type: 'json',
 
-						async: false,
-
-						beforeSend: function(){
-							console.log('send');
-						}
-
-					}).done( function( response ){
-
-						var select = '<option value=""></option>';
-						
-						for(var i in response) {
-							
-							select += '<option value="' + i + '">' + response[i] + '</option>';
-						}					
-
-						$jxcombo.html(select);
-
-						$jxcombo.trigger("change");
-
-					});
-				}
+					self.llenarconAjax( $jxcombo );
 				
 			}
 		},
@@ -69,46 +39,30 @@
 			$( parents ).on('change', function (){
 
 				$('select[data-parent="#' + $(this).attr('id') +'"]').each(function(){
-					self = this;
-					$combo = $(this);
-					
-					//console.log(self);
-
-					return $.ajax({
-						
-						url: $combo.data('source'),
-						
-						method: 'GET',
-						
-						type: 'json'
-
-						//async: false
-
-					}).done( function( response ){
-
-						console.log(self);
-
-						var select = '<option value=""></option>';
-						
-						for(var i in response) {
-							
-							select += '<option value="' + i + '">' + response[i] + '</option>';
-						}					
-
-						$combo.html(select);
-
-						$combo.trigger('change')
-
-					}).fail(function(){
-						console.log('error');
-					});
+					self.llenarconAjax( $(this) );
 				});
 
 			});
 
 			
-		}
+		},
 
+		llenarconAjax: function( $jxcombo ){
+
+			$.ajax({					
+					url: $jxcombo.data('source'),
+					method: 'GET',
+					type: 'json'
+				}).done( function( response ) {
+
+					var select = '<option value=""></option>';
+
+					for(var i in response)
+						select += '<option value="' + i + '">' + response[i] + '</option>';
+				
+					$jxcombo.html(select);
+				});
+		}
 	}
 
 
