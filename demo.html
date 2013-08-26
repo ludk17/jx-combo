@@ -8,9 +8,18 @@
 	<select name="country" id="country" role="jxcombo" data-source="data/countries.json" ></select>
 	<select name="city" id="city" role="jxcombo" data-source="data/cities.json" data-parent="#country" ></select>
 	<select name="provincia" id="provincia" role="jxcombo" data-source="data/provincia.json" data-parent="#city" ></select>
+
+	<select id="country2" ></select>
+	<select id="city2"></select>
 	
 	<script type="text/javascript" src="src/jquery-1.10.2.js" ></script>
 	<script type="text/javascript" src="src/jxcombo-0.0.1.js" ></script>
+
+	<script>
+		(function ( $ ){
+			$('#country2').jxcombo( { } );
+		})( jQuery );
+	</script>
 	
 </body>
 </html>

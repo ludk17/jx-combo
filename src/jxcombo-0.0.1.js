@@ -1,71 +1,122 @@
-( function($){
+// Utility
+if ( typeof Object.create !== 'function' ) {
+	Object.create = function( obj ) {
+		function F() {};
+		F.prototype = obj;
+		return new F();
+	};
+}
 
-	var self;
+(function( $, window, document, undefined ) {
+	
 	var JxCombo = {
-		
-		init: function () {
-			self = this;
 
-			var jxcombos = $("select[role='jxcombo']");
+		init: function( options , elem ) {
 
-			self.bindEvents();
+			console.log( options );
 
-			for(var index = 0; index < jxcombos.length; index++) 
+			console.log( elem );
+
+			var jxcombos = elem !== undefined ? $(elem) : $("select[role='jxcombo']").not("[data-parent]");
+
+			this.fillComboIndependent( jxcombos );
+
+			this.bindEvents();
+		},
+
+		fillComboIndependent: function( jxcombos )
+		{
+			for( var index = 0; index < jxcombos.length; index++ )
 			{
-
 				var $jxcombo = $(jxcombos[index]);
 				
-				var hasParent = $jxcombo.data('parent') ? true: false;
-				
-				if ( ! hasParent )
-
-					self.llenarconAjax( $jxcombo );
-				
+				this.fillJxCombo( this, $jxcombo );
 			}
 		},
 
-		bindEvents: function() {
+		fillComboDependent: function( e )
+		{
+			var self = e.data.self, $this = $(this);
+
+			$('select[data-parent="#' + $this.attr('id') +'"]').each( function( ) {
 			
-			var parents = "";
-			var $selects = $('select[data-parent]');
-
-			for( var index = 0; index < $selects.length; index ++ )
-			{
-				var coma = index + 1 === $selects.length ? "" : ","
-				parents += $( $selects[index] ).data('parent') +  coma;				
-			}
-
-
-			$( parents ).on('change', function (){
-
-				$('select[data-parent="#' + $(this).attr('id') +'"]').each(function(){
-					self.llenarconAjax( $(this) );
-				});
+				self.fillJxCombo( self, $(this),  $this.val() );
 
 			});
-
-			
 		},
 
-		llenarconAjax: function( $jxcombo ){
+		bindEvents: function( ) {			
 
-			$.ajax({					
-					url: $jxcombo.data('source'),
-					method: 'GET',
-					type: 'json'
-				}).done( function( response ) {
+			var $parents = this._getComboParents();
 
-					var select = '<option value=""></option>';
+			$parents.on('change', { self: this }, this.fillComboDependent);
+		},
 
-					for(var i in response)
-						select += '<option value="' + i + '">' + response[i] + '</option>';
+		fillJxCombo: function( self, $jxcombo, value ){
+
+			var select = '<option value=""></option>';
+
+			self.fetch( $jxcombo, value ).done( function( response ) {
 				
-					$jxcombo.html(select);
+				for( var i in response )
+					select += '<option value="' + i + '">' + response[i] + '</option>';
+		
+				$jxcombo.html(select);
+
+			}).fail( function ( xhr, ajaxOptions, thrownError ) {
+
+				$jxcombo.html('<option>'+ xhr.status + ' - ' + xhr.statusText +'</option>');
+
+			});		
+		},
+
+		fetch: function( $jxcombo, value ){
+
+			return $.ajax({					
+					url: $jxcombo.data('source'),
+					data: { 'id' : value },
+					method: 'GET',
+					type: 'json',
+					cache: false
 				});
+		},
+
+		_getComboParents: function( ) {
+			
+			var parents = "", $selects = $('select[data-parent]');
+
+			for( var index = 0; index < $selects.length; index ++ ) 
+			{
+				var coma = index + 1 === $selects.length ? "" : ","
+
+				parents += $( $selects[index] ).data('parent') +  coma;
+			}
+
+			return $(parents);
 		}
-	}
+	};
 
+	$.fn.jxcombo = function( options ) {
+		
+		return this.each(function() {
+			
+			var jxqcombo = Object.create( JxCombo );
+			
+			jxqcombo.init( options, this );
 
-	JxCombo.init();
+			//$.data( this, 'jxcombo', jxqcombo );
+		});
+	};
 
-})( jQuery );
+	$.fn.jxcombo.options = {
+		search: '@tutspremium',
+		wrapEachWith: '<li></li>',
+		limit: 10,
+		refresh: null,
+		onComplete: null,
+		transition: 'fadeToggle'
+	};
+
+	//JxCombo.init();
+
+})( jQuery, window, document );
