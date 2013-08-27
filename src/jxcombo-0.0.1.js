@@ -11,52 +11,82 @@ if ( typeof Object.create !== 'function' ) {
 	
 	var JxCombo = {
 
-		init: function( options , elem ) {
+		init: function() {
 
-			console.log( options );
-
-			console.log( elem );
-
-			var jxcombos = elem !== undefined ? $(elem) : $("select[role='jxcombo']").not("[data-parent]");
-
-			this.fillComboIndependent( jxcombos );
-
-			this.bindEvents();
-		},
-
-		fillComboIndependent: function( jxcombos )
-		{
+			var self = this;			
+						
+			var jxcombos = $("select[role='jxcombo']");//.not("[data-parent]");
+			
 			for( var index = 0; index < jxcombos.length; index++ )
 			{
-				var $jxcombo = $(jxcombos[index]);
-				
-				this.fillJxCombo( this, $jxcombo );
+				var $jxcombo = $(jxcombos[index]);				
+
+				var options = self.getOptions( $jxcombo );
+			
+				if ( options.parent === undefined )	
+					self.fillComboIndependent( $jxcombo, options );
+				else				
+					self.bindEvents( $jxcombo, options, $(options.parent) );
+
 			}
+
+			
+		},		
+
+		getOptions: function( $jxcombo, options )
+		{
+			if( options !== undefined )
+				return {
+					source: options.source === undefined ? $jxcombo.data('source') : options.source,
+					parent: options.parent === undefined ? $jxcombo.data('parent') : options.parent
+				};
+			
+			else
+				return {
+					source: $jxcombo.data('source'),
+					parent: $jxcombo.data('parent')
+				};			
+		},
+
+		fillComboIndependent: function( $jxcombo, options )
+		{
+			var self = this;
+
+			self.fillJxCombo( $jxcombo, options );
+			
 		},
 
 		fillComboDependent: function( e )
-		{
-			var self = e.data.self, $this = $(this);
+		{		
 
-			$('select[data-parent="#' + $this.attr('id') +'"]').each( function( ) {
-			
-				self.fillJxCombo( self, $(this),  $this.val() );
+			var self = e.data.self, 
+				$this = $(this), 
+				$jxcombos = e.data.$jxcombos,
+				options = e.data.options;				
+
+			$jxcombos.each( function( ) {
+
+				self.fillJxCombo( $(this),  options, $this.val() );
 
 			});
 		},
 
-		bindEvents: function( ) {			
+		bindEvents: function( $jxcombo, options, $parent ) {			
 
-			var $parents = this._getComboParents();
+			var self = this;
 
-			$parents.on('change', { self: this }, this.fillComboDependent);
+			var $parents = $parent === undefined ? self._getComboParents() : $parent;
+			
+			$parents.on('change', { self: self, $jxcombos : $jxcombo, options : options }, self.fillComboDependent);
 		},
 
-		fillJxCombo: function( self, $jxcombo, value ){
+		fillJxCombo: function( $jxcombo, options, parentValue ){
 
-			var select = '<option value=""></option>';
+			var self = this,
+				select = '<option value=""></option>',
+				source = options.source;		
 
-			self.fetch( $jxcombo, value ).done( function( response ) {
+			self.fetch( $jxcombo, source, parentValue ).done( function( response ) {
 				
 				for( var i in response )
 					select += '<option value="' + i + '">' + response[i] + '</option>';
@@ -70,11 +100,11 @@ if ( typeof Object.create !== 'function' ) {
 			});		
 		},
 
-		fetch: function( $jxcombo, value ){
-
+		fetch: function( $jxcombo, source, parentValue ) {			
+			
 			return $.ajax({					
-					url: $jxcombo.data('source'),
-					data: { 'id' : value },
+					url: source,
+					data: { 'id' : parentValue },
 					method: 'GET',
 					type: 'json',
 					cache: false
@@ -100,23 +130,25 @@ if ( typeof Object.create !== 'function' ) {
 		
 		return this.each(function() {
 			
-			var jxqcombo = Object.create( JxCombo );
+			var jxcombo = Object.create( JxCombo ),
+				$this = $(this);
 			
-			jxqcombo.init( options, this );
+				options = jxcombo.getOptions( $this, options );
+			
+			if ( options.parent === undefined )	
+				jxcombo.fillComboIndependent( $this, options );
+			else				
+				jxcombo.bindEvents( $this, options, $(options.parent) );
+
 
 			//$.data( this, 'jxcombo', jxqcombo );
 		});
 	};
 
 	$.fn.jxcombo.options = {
-		search: '@tutspremium',
-		wrapEachWith: '<li></li>',
-		limit: 10,
-		refresh: null,
-		onComplete: null,
-		transition: 'fadeToggle'
+		source: null
 	};
 
-	//JxCombo.init();
+	JxCombo.init();
 
 })( jQuery, window, document );
