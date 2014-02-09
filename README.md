@@ -40,6 +40,6 @@ Opciones
 
 <b>data-source</b>: Fuente de datos ej: "localhost/myapp/paises.php"
 
-<b>data-parent</b>: Selector pader ej: "#pais", "input[name='pais']"
+<b>data-parent</b>: Selector padre ej: "#pais", "input[name='pais']"
 
 <b>data-default</b>: Valor que se seleccionara por defecto.
