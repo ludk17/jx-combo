@@ -108,11 +108,11 @@ if ( typeof Object.create !== 'function' ) {
 		fetch: function( $jxcombo, source, parentValue ) {			
 			
 			return $.ajax({					
-					url: source,
-					data: { 'id' : parentValue },
+					url: source,					
 					method: 'GET',
 					type: 'json',
-					cache: false
+					cache: false,
+					data: { 'id' : parentValue }
 				});
 		},
 
