@@ -26,7 +26,7 @@ Forma automática (simple)
 &lt;select id="pais" name="pais" role="jxcombo" data-source="paises.php"&gt;&lt;/select&gt;
 </code>
 
-Forma automática (aninado)
+Forma automática (anidado)
 -------------------------
 
 <code>
